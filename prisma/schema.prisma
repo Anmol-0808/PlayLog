@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String?  @unique
+  image     String?
+  createdAt DateTime @default(now())
+
+  gameStatuses UserGameStatus[]
+  reviews      Review[]
+}
+
+model Game {
+  id          String   @id @default(cuid())
+  title       String
+  coverUrl    String?
+  releaseYear Int?
+  createdAt   DateTime @default(now())
+
+  gameStatuses UserGameStatus[]
+  reviews      Review[]
+}
+
+model UserGameStatus {
+  id        String   @id @default(cuid())
+  status    GameStatus
+  createdAt DateTime @default(now())
+
+  user   User @relation(fields: [userId], references: [id])
+  userId String
+
+  game   Game @relation(fields: [gameId], references: [id])
+  gameId String
+
+  @@unique([userId, gameId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int
+  text      String?
+  createdAt DateTime @default(now())
+
+  user   User @relation(fields: [userId], references: [id])
+  userId String
+
+  game   Game @relation(fields: [gameId], references: [id])
+  gameId String
+
+  @@unique([userId, gameId])
+}
+
+enum GameStatus {
+  PLAYED
+  PLAYING
+  WISHLIST
+}
