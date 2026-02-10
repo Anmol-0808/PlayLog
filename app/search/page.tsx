@@ -24,8 +24,9 @@ export default function SearchPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!query) {
+    if (!query.trim()) {
       setResults([]);
+      setLoading(false);
       return;
     }
 
@@ -49,7 +50,7 @@ export default function SearchPage() {
         setResults(data);
       } catch (err: any) {
         if (err.name !== "AbortError") {
-          setError("Something went wrong");
+          setError("Something went wrong. Please try again.");
         }
       } finally {
         setLoading(false);
@@ -65,56 +66,101 @@ export default function SearchPage() {
   }, [query]);
 
   return (
-    <main className="p-8 space-y-6">
-      <h1 className="text-3xl font-black">Search Games</h1>
-
-      <input
-        type="text"
-        placeholder="It Exists? It's Here..."
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        className="w-full max-w-md border-2 border-black shadow-[4px_4px_0px_0px_black] px-4 py-2"
-      />
-
-      {loading && <p>Searching games...</p>}
-      {error && <p className="text-red-600">{error}</p>}
-
-            <ul className="grid grid-cols-1 md:grid-cols-2 gap-6">
-  {results.map((game) => (
-    <Card key={game.id}>
-      <CardContent className="space-y-3">
-        <Link href={`/games/${game.id}`}>
-          <p className="font-bold text-lg underline hover:text-[#00e054]">
-            {game.name}
+    <main className="min-h-screen bg-[#14181c] text-gray-200 p-8">
+      <div className="max-w-5xl mx-auto space-y-10">
+        {/* Header */}
+        <section className="space-y-1">
+          <h1 className="text-3xl font-black">Search</h1>
+          <p className="text-gray-400">
+            Find games to log, rate, and remember.
           </p>
-        </Link>
+        </section>
 
-        {game.cover?.url && (
-          <Image
-            src={`https:${game.cover.url.replace("t_thumb", "t_cover_big")}`}
-            alt={game.name}
-            width={128}
-            height={180}
-            unoptimized
+
+        <section>
+          <input
+            type="text"
+            placeholder="It Exists? It's here..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="
+              w-full
+              max-w-xl
+              bg-[#14181c]
+              border-5 border-black
+              shadow-[2px_2px_0px_0px_black]
+              px-4 py-3
+              text-gray-200
+              placeholder-gray-500
+              focus:outline-none
+            "
           />
-        )}
+        </section>
 
-        {game.platforms && (
+        {loading && (
           <p className="text-sm text-gray-400">
-            {game.platforms.map((p) => p.name).join(", ")}
+            Searching games…
           </p>
         )}
-      </CardContent>
-    </Card>
-  ))}
-</ul>
+
+        {error && (
+          <p className="text-sm text-red-400">
+            {error}
+          </p>
+        )}
+
+        {results.length > 0 && (
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {results.map((game) => (
+              <Card
+                key={game.id}
+                className="border-2 border-black bg-[#1f2328]"
+              >
+                <CardContent className="p-4 space-y-3">
+                  <Link
+                    href={`/games/${game.id}`}
+                    className="font-semibold text-lg hover:underline"
+                  >
+                    {game.name}
+                  </Link>
+
+                  {game.cover?.url && (
+                    <Image
+                      src={`https:${game.cover.url.replace(
+                        "t_thumb",
+                        "t_cover_big"
+                      )}`}
+                      alt={game.name}
+                      width={128}
+                      height={180}
+                      unoptimized
+                    />
+                  )}
+
+                  {game.platforms && game.platforms.length > 0 && (
+                    <p className="text-sm text-gray-400">
+                      {game.platforms.map((p) => p.name).join(", ")}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </section>
+        )}
+
+        {!loading && query && results.length === 0 && (
+          <p className="text-sm text-gray-400">
+            No games found.
+          </p>
+        )}
 
 
-
-
-      {!loading && query && results.length === 0 && (
-        <p>No games found.</p>
-      )}
+        {!query && (
+          <p className="text-sm text-gray-500">
+            Start by typing the name of a game.
+          </p>
+        )}
+      </div>
     </main>
   );
 }

@@ -22,12 +22,13 @@ export async function POST(req: Request) {
     );
   }
 
+
   const game = await prisma.game.upsert({
     where: { igdbId: gameId },
     update: {},
     create: {
       igdbId: gameId,
-      title: "Unknown", 
+      title: "Unknown",
     },
   });
 
@@ -51,4 +52,53 @@ export async function POST(req: Request) {
   });
 
   return NextResponse.json(review);
+}
+
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const igdbId = Number(searchParams.get("igdbId"));
+
+  if (!igdbId || Number.isNaN(igdbId)) {
+    return NextResponse.json(
+      { error: "Invalid igdbId" },
+      { status: 400 }
+    );
+  }
+
+  const game = await prisma.game.findUnique({
+    where: { igdbId },
+  });
+
+  if (!game) {
+    return NextResponse.json({
+      averageRating: null,
+      count: 0,
+      reviews: [],
+    });
+  }
+
+  const stats = await prisma.review.aggregate({
+    where: { gameId: game.id },
+    _avg: { rating: true },
+    _count: true,
+  });
+
+  const reviews = await prisma.review.findMany({
+    where: { gameId: game.id },
+    orderBy: { createdAt: "desc" },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  return NextResponse.json({
+    averageRating: stats._avg.rating,
+    count: stats._count,
+    reviews,
+  });
 }

@@ -11,15 +11,16 @@ model User {
   id            String    @id @default(cuid())
   name          String?
   email         String?   @unique
-  emailVerified DateTime?   
+  emailVerified DateTime?
   image         String?
   createdAt     DateTime  @default(now())
 
-  accounts      Account[]
-  sessions      Session[]
+  accounts Account[]
+  sessions Session[]
 
-  gameStatuses  UserGameStatus[]
-  reviews       Review[]
+  gameStatuses UserGameStatus[]
+  reviews      Review[]
+  lists        List[]
 }
 
 model Game {
@@ -28,21 +29,22 @@ model Game {
   coverUrl    String?
   releaseYear Int?
   createdAt   DateTime @default(now())
-  igdbId      Int       @unique
+  igdbId      Int      @unique
 
   gameStatuses UserGameStatus[]
   reviews      Review[]
+  listItems    ListItem[] 
 }
 
 model UserGameStatus {
-  id        String   @id @default(cuid())
+  id        String     @id @default(cuid())
   status    GameStatus
-  createdAt DateTime @default(now())
+  createdAt DateTime   @default(now())
 
-  user   User @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
   userId String
 
-  game   Game @relation(fields: [gameId], references: [id])
+  game   Game   @relation(fields: [gameId], references: [id])
   gameId String
 
   @@unique([userId, gameId])
@@ -54,13 +56,38 @@ model Review {
   text      String?
   createdAt DateTime @default(now())
 
-  user   User @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
   userId String
 
-  game   Game @relation(fields: [gameId], references: [id])
+  game   Game   @relation(fields: [gameId], references: [id])
   gameId String
 
   @@unique([userId, gameId])
+}
+
+model List {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+  type        ListType @default(NORMAL)
+  items ListItem[]
+}
+
+model ListItem {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  list   List   @relation(fields: [listId], references: [id])
+  listId String
+
+  game   Game   @relation(fields: [gameId], references: [id])
+  gameId String
+
+  @@unique([listId, gameId])
 }
 
 enum GameStatus {
@@ -103,5 +130,9 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+enum ListType {
+  NORMAL
+  FAVORITES
 }
 
